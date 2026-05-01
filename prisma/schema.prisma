@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//tabelas do usuario
+model User {
+  id         String   @id @default(uuid())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  profile_picture_url String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  passwordResets PasswordReset[] //link para senha
+  storeRatings   StoreRatings[] //link para o storeRat
+}
+
+model PasswordReset {
+  id         String @id @default(uuid())
+  userId     String
+  user       User   @relation(fields: [userId], references: [id])
+  code       String 
+  expiresAt  DateTime
+  used       Boolean @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model StoreRatings {
+  id         String @id @default(uuid())
+
+  userId     String //lnk
+  user       User   @relation(fields: [userId], references: [id])
+  storeId    String //lnk
+  store      Store  @relation(fields: [storeId], references: [id]) //adicionar na tabela store
+
+  rating     Int
+  comment    String? 
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProductRatings {
+  id         String @id @default(uuid()) //lnk
+  userId     String //lnk
+  productId  String //lnk
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model RatingComments {
+  id         String @id @default(uuid())
+  userId     String //lnk
+  storeRatingId  String //lnk
+  productRatingId String //lnk
+  content    String
+  createdAt  DateTime @default(now())
+  updateAt   DateTime @updatedAt
+}
+
+//tabelas produtos
+model Categories {
+  id         String @id @default(uuid()) //link para parentcategory
+  name       String 
+  parentCategoryId String 
+}
