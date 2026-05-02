@@ -16,6 +16,7 @@ datasource db {
 //tabelas do usuario
 model User {
   id         String   @id @default(uuid())
+  name       String?   
   username   String   @unique
   email      String   @unique
   password   String
@@ -23,14 +24,17 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  passwordResets PasswordReset[] //link para senha
-  storeRatings   StoreRatings[] //link para o storeRat
+  passwordResets PasswordReset[]
+  storeRatings   StoreRatings[]
+  ratingComments RatingComments[]
+  stores         Stores[]
+  
 }
 
 model PasswordReset {
   id         String @id @default(uuid())
   userId     String
-  user       User   @relation(fields: [userId], references: [id])
+  user       User  @relation(fields: [userId],  references: [id])
   code       String 
   expiresAt  DateTime
   used       Boolean @default(false)
@@ -41,31 +45,42 @@ model StoreRatings {
   id         String @id @default(uuid())
 
   userId     String //lnk
-  user       User   @relation(fields: [userId], references: [id])
+  user       User @relation(fields: [userId],  references: [id])
+
   storeId    String //lnk
-  store      Store  @relation(fields: [storeId], references: [id]) //adicionar na tabela store
+  store      Stores @relation(fields: [storeId], references: [id])
 
   rating     Int
   comment    String? 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  productRatings ProductRatings[]
 }
 
 model ProductRatings {
-  id         String @id @default(uuid()) //lnk
+  id         String @id @default(uuid())
   userId     String //lnk
+  user       StoreRatings @relation(fields: [userId], references: [id])
   productId  String //lnk
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  ratingComments RatingComments[]
 }
 
 model RatingComments {
   id         String @id @default(uuid())
-  userId     String //lnk
-  storeRatingId  String //lnk
-  productRatingId String //lnk
+
+  userId     String 
+  user       User @relation(fields: [userId], references: [id])
+  storeRatingId  String? 
+  
+  productRatingId String? 
+  product    ProductRatings? @relation(fields: [productRatingId], references: [id])
+
   content    String
   createdAt  DateTime @default(now())
   updateAt   DateTime @updatedAt
@@ -76,4 +91,52 @@ model Categories {
   id         String @id @default(uuid()) //link para parentcategory
   name       String 
   parentCategoryId String 
+
+  stores     Stores[]
 }
+
+model Stores {
+  id         String @id @default(uuid())
+
+  userId     String
+  user       User @relation(fields: [userId], references: [id])
+  categoryId String
+  category   Categories @relation(fields: [categoryId], references: [id])
+  
+  name  String
+  description String?
+  logoUrl    String
+  bannerUrl  String
+  stickerUrl String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  storeRatings StoreRatings[]
+  products     Products[]
+}
+
+model Products {
+  id         String @id @default(uuid())
+
+  storeId    String 
+  store      Stores @relation(fields: [storeId], references: [id])
+  
+  categoryId String
+  name       String
+  description String?
+  price      Float 
+  stock      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  productimages   Productimages[]
+}
+
+model Productimages {
+  id         String @id @default(uuid())
+  productId    String
+  product      Products @relation(fields: [productId], references: [id])
+  imageUrl   String
+  order      Int
+}
+
