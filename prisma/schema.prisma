@@ -9,134 +9,143 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 //tabelas do usuario
-model User {
-  id         String   @id @default(uuid())
-  name       String?   
-  username   String   @unique
+model usuarios {
+  id         Int @id @default(autoincrement())
+  name       String   
+  nome       String   @unique
   email      String   @unique
   password   String
   profile_picture_url String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  passwordResets PasswordReset[]
-  storeRatings   StoreRatings[]
-  ratingComments RatingComments[]
-  stores         Stores[]
+  lojas      lojas[]
+  avaliacoesLoja avaliacoesLoja[]
+  comentariosAvaliacoes comentariosAvaliacoes[]
+  avaliacoesProduto avaliacoesProduto[]
+ 
+}
+//tabela das lojas
+model lojas {
+  id         Int @id @default(autoincrement())
+
+  usuarioId  Int @unique
+  usuario    usuarios @relation(fields: [usuarioId], references: [id])
   
-}
-
-model PasswordReset {
-  id         String @id @default(uuid())
-  userId     String
-  user       User  @relation(fields: [userId],  references: [id])
-  code       String 
-  expiresAt  DateTime
-  used       Boolean @default(false)
-  createdAt  DateTime @default(now())
-}
-
-model StoreRatings {
-  id         String @id @default(uuid())
-
-  userId     String //lnk
-  user       User @relation(fields: [userId],  references: [id])
-
-  storeId    String //lnk
-  store      Stores @relation(fields: [storeId], references: [id])
-
-  rating     Int
-  comment    String? 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  productRatings ProductRatings[]
-}
-
-model ProductRatings {
-  id         String @id @default(uuid())
-  userId     String //lnk
-  user       StoreRatings @relation(fields: [userId], references: [id])
-  productId  String //lnk
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  ratingComments RatingComments[]
-}
-
-model RatingComments {
-  id         String @id @default(uuid())
-
-  userId     String 
-  user       User @relation(fields: [userId], references: [id])
-  storeRatingId  String? 
-  
-  productRatingId String? 
-  product    ProductRatings? @relation(fields: [productRatingId], references: [id])
-
-  content    String
-  createdAt  DateTime @default(now())
-  updateAt   DateTime @updatedAt
-}
-
-//tabelas produtos
-model Categories {
-  id         String @id @default(uuid()) //link para parentcategory
-  name       String 
-  parentCategoryId String 
-
-  stores     Stores[]
-}
-
-model Stores {
-  id         String @id @default(uuid())
-
-  userId     String
-  user       User @relation(fields: [userId], references: [id])
-  categoryId String
-  category   Categories @relation(fields: [categoryId], references: [id])
-  
-  name  String
-  description String?
+  nome       String
+  descricao  String?
   logoUrl    String
   bannerUrl  String
   stickerUrl String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  storeRatings StoreRatings[]
-  products     Products[]
+  avaliacoesLoja avaliacoesLoja[]
+  produtos produtos[]
 }
 
-model Products {
-  id         String @id @default(uuid())
+//tabela da avaliação da loja
+model avaliacoesLoja {
+  id         Int @id @default(autoincrement())
 
-  storeId    String 
-  store      Stores @relation(fields: [storeId], references: [id])
-  
-  categoryId String
-  name       String
-  description String?
-  price      Float 
-  stock      Int
+  usuarioId  Int  @unique
+  usuario    usuarios @relation(fields: [usuarioId],  references: [id])
+
+  lojaId     Int @unique
+  loja       lojas @relation(fields: [lojaId], references: [id])
+
+  nota       Int
+  comentario String? 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  productimages   Productimages[]
+  comentariosAvaliacoes comentariosAvaliacoes[]
+
+}
+//tabela com as avaliações dos produtos
+model avaliacoesProduto {
+  id         Int @id @default(autoincrement())
+
+  usuarioId  Int @unique
+  usuario    usuarios @relation(fields: [usuarioId], references: [id])
+  
+  productId  Int @unique
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  comentariosAvaliacoes comentariosAvaliacoes[]
+  produtos produtos[]
+
+
+}
+//tabela para os comentarios
+model comentariosAvaliacoes {
+  id         Int @id @default(autoincrement())
+
+  usuarioId     Int @unique 
+  usuario       usuarios @relation(fields: [usuarioId], references: [id])
+
+  avaliacoesLojaId   Int @unique
+  avaliacoesLoja     avaliacoesLoja @relation(fields: [avaliacoesLojaId], references: [id])
+
+  avaliacoesProdutoId  Int @unique
+  avaliacoesProduto    avaliacoesProduto @relation(fields: [avaliacoesProdutoId], references: [id])
+
+  conteudo    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
 }
 
-model Productimages {
-  id         String @id @default(uuid())
-  productId    String
-  product      Products @relation(fields: [productId], references: [id])
+//tabelas das categorias
+model categorias {
+  id         Int @id @default(autoincrement()) //link para parentcategory
+  name       String 
+
+  parentCategoryId Int? 
+  parentCategory   categorias?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  subCategories    categorias[] @relation("CategoryHierarchy")
+
+  produtos    produtos[]
+}
+
+//tabela dos  produtos
+model produtos {
+  id         Int @id @default(autoincrement())
+
+  lojaId     Int @unique 
+  lojas       lojas @relation(fields: [lojaId], references: [id])
+  
+  categoriaId Int @unique
+  categoria    categorias @relation(fields: [categoriaId], references: [id])
+
+  name        String
+  description String?
+  preco       Float 
+  estoque     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  
+  avaliacoesProduto avaliacoesProduto[]
+  imagensProdutos imagensProdutos[]
+  
+}
+//tabela das imagens
+model imagensProdutos {
+  id         Int @id @default(autoincrement())
+
+  produtoId  Int @unique
+  produto    produtos @relation(fields: [produtoId], references: [id])
+
   imageUrl   String
-  order      Int
+  ordem      Int
 }
 
