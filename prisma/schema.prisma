@@ -1,7 +1,10 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
+//npx prisma generate
+//npx prisma migrate dev
+//npx prisma studio
+//inserir no .env DATABASE_URL="file:./dev.db"
 
 generator client {
   provider = "prisma-client"
@@ -9,71 +12,141 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")//ignora
 }
 
 //tabelas do usuario
-model User {
-  id         String   @id @default(uuid())
-  username   String   @unique
+model usuarios {
+  id         Int @id @default(autoincrement())
+  name       String   
+  nome       String   @unique
   email      String   @unique
   password   String
   profile_picture_url String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  passwordResets PasswordReset[] //link para senha
-  storeRatings   StoreRatings[] //link para o storeRat
+  lojas      lojas[]
+  avaliacoesLoja avaliacoesLoja[]
+  comentariosAvaliacoes comentariosAvaliacoes[]
+  avaliacoesProduto avaliacoesProduto[]
+ 
 }
+//tabela das lojas
+model lojas {
+  id         Int @id @default(autoincrement())
 
-model PasswordReset {
-  id         String @id @default(uuid())
-  userId     String
-  user       User   @relation(fields: [userId], references: [id])
-  code       String 
-  expiresAt  DateTime
-  used       Boolean @default(false)
-  createdAt  DateTime @default(now())
-}
-
-model StoreRatings {
-  id         String @id @default(uuid())
-
-  userId     String //lnk
-  user       User   @relation(fields: [userId], references: [id])
-  storeId    String //lnk
-  store      Store  @relation(fields: [storeId], references: [id]) //adicionar na tabela store
-
-  rating     Int
-  comment    String? 
+  usuarioId  Int @unique
+  usuario    usuarios @relation(fields: [usuarioId], references: [id])
+  
+  nome       String
+  descricao  String?
+  logoUrl    String
+  bannerUrl  String
+  stickerUrl String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  avaliacoesLoja avaliacoesLoja[]
+  produtos produtos[]
 }
 
-model ProductRatings {
-  id         String @id @default(uuid()) //lnk
-  userId     String //lnk
-  productId  String //lnk
+//tabela da avaliação da loja
+model avaliacoesLoja {
+  id         Int @id @default(autoincrement())
+
+  usuarioId  Int  @unique
+  usuario    usuarios @relation(fields: [usuarioId],  references: [id])
+
+  lojaId     Int @unique
+  loja       lojas @relation(fields: [lojaId], references: [id])
+
+  nota       Int
+  comentario String? 
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  comentariosAvaliacoes comentariosAvaliacoes[]
+}
+//tabela com as avaliações dos produtos
+model avaliacoesProduto {
+  id         Int @id @default(autoincrement())
+
+  usuarioId  Int @unique
+  usuario    usuarios @relation(fields: [usuarioId], references: [id])
+  
+  productId  Int @unique
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-}
 
-model RatingComments {
-  id         String @id @default(uuid())
-  userId     String //lnk
-  storeRatingId  String //lnk
-  productRatingId String //lnk
-  content    String
+  comentariosAvaliacoes comentariosAvaliacoes[]
+  produtos produtos[]
+
+
+}
+//tabela para os comentarios
+model comentariosAvaliacoes {
+  id         Int @id @default(autoincrement())
+
+  usuarioId     Int @unique 
+  usuario       usuarios @relation(fields: [usuarioId], references: [id])
+
+  avaliacoesLojaId   Int @unique
+  avaliacoesLoja     avaliacoesLoja @relation(fields: [avaliacoesLojaId], references: [id])
+
+  avaliacoesProdutoId  Int @unique
+  avaliacoesProduto    avaliacoesProduto @relation(fields: [avaliacoesProdutoId], references: [id])
+
+  conteudo    String
   createdAt  DateTime @default(now())
-  updateAt   DateTime @updatedAt
+  updatedAt  DateTime @updatedAt
+
 }
 
-//tabelas produtos
-model Categories {
-  id         String @id @default(uuid()) //link para parentcategory
+//tabelas das categorias
+model categorias {
+  id         Int @id @default(autoincrement()) //link para parentcategory
   name       String 
-  parentCategoryId String 
+
+  parentCategoryId Int? 
+  parentCategory   categorias?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  subCategories    categorias[] @relation("CategoryHierarchy")
+
+  produtos    produtos[]
+}
+
+//tabela dos  produtos
+model produtos {
+  id         Int @id @default(autoincrement())
+
+  lojaId     Int @unique 
+  lojas       lojas @relation(fields: [lojaId], references: [id])
+  
+  categoriaId Int @unique
+  categoria    categorias @relation(fields: [categoriaId], references: [id])
+
+  name        String
+  description String?
+  preco       Float 
+  estoque     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  
+  avaliacoesProduto avaliacoesProduto[]
+  imagensProdutos imagensProdutos[]
+  
+}
+//tabela das imagens
+model imagensProdutos {
+  id         Int @id @default(autoincrement())
+
+  produtoId  Int @unique
+  produto    produtos @relation(fields: [produtoId], references: [id])
+
+  imageUrl   String
+  ordem      Int
 }
