@@ -2,18 +2,25 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {User} from './entities/user.entity';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { randomUUID } from 'node:crypto';
+import * as brcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-
+  
   //a função para criação do usuário tem como parametro um objeto data com os atributos definidos no createUserDTO
   async create(data: CreateUserDto) {
+    //função que realiza o hash da senha
+    const salt = await brcrypt.genSalt();
+    const hashedPassword = await brcrypt.hash(data.password, salt);
     //cria um objeto para o novo usuário
     const newUser = await this.prisma.usuarios.create({
-      data: data,
+      data:{
+        ...data,
+        password: hashedPassword,
+      }
     });
 
     //retorna o novo objeto
