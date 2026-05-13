@@ -1,9 +1,5 @@
-//definição dos atributos da entidade usuário
-import { randomUUID } from "crypto";
-
-
 export class User {
-    id: string = randomUUID();
+    id!: number;
     email!: string;
     name!: string;
     username!: string;

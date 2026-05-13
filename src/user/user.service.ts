@@ -1,23 +1,30 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import {User} from './entities/user.entity';
-import { PrismaService } from 'src/database/prisma.service';
-import { randomUUID } from 'node:crypto';
+import { PrismaService } from 'prisma/prisma.service';
+import * as brcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-
+  
   //a função para criação do usuário tem como parametro um objeto data com os atributos definidos no createUserDTO
   async create(data: CreateUserDto) {
+    //função que realiza o hash da senha
+    const hashedPassword = await brcrypt.hash(data.password, 10);
     //cria um objeto para o novo usuário
     const newUser = await this.prisma.usuarios.create({
-      data: data,
+      data:{
+        ...data,
+        password: hashedPassword,
+      }
     });
 
     //retorna o novo objeto
-    return newUser;
+    return {
+      ...newUser,
+      password: undefined,
+    };
   }
 
   async findAll() {
@@ -26,17 +33,17 @@ export class UserService {
   }
 
 //a função para buscar um usuário tem como parâmetro um id
-  async findOne(id: number) {
+  async findbyEmail(email: string) {
     //cria uma constante local e busca o usuário com o id correspondente
     const user = await this.prisma.usuarios.findUnique({
-      where: { id },
+      where: { email },
     });
     //se ele não for encontrado o sistema retorna uma mensagem de usuário não encontrado
     if(!user){
       throw new NotFoundException('Usuário não encontrado')
     }
     //se for encontrado retorna o nome do usuário
-    return `user ${user.name}`;
+    return user;
   }
 
   //a função para atualizar um usuário tem como parâmetro o id do usuário que será atualizado 
