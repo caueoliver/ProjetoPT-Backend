@@ -1,15 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { ProdutoModule } from './produto/produto.module';
+import { LojaModule } from './loja/loja.module';
 import { CategoriaModule } from './categoria/categoria.module';
 import { AvaliacaolojaModule } from './avaliacaoloja/avaliacaoloja.module';
 
+
 @Module({
-  imports: [UserModule, UserModule, AuthModule, CategoriaModule, AvaliacaolojaModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, UserModule, AuthModule, CategoriaModule, AvaliacaolojaModule, ProdutoModule,
+    LojaModule],
+
   controllers: [AppController],
   providers: [AppService,
     {
@@ -18,4 +24,4 @@ import { AvaliacaolojaModule } from './avaliacaoloja/avaliacaoloja.module';
     }
   ],
 })
-export class AppModule {}
+export class AppModule { }
