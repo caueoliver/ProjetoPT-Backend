@@ -8,15 +8,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ProdutoModule } from './produto/produto.module';
 import { LojaModule } from './loja/loja.module';
+import { CategoriaModule } from './categoria/categoria.module';
+import { AvaliacaolojaModule } from './avaliacaoloja/avaliacaoloja.module';
+
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    UserModule,
-    AuthModule,
-    ProdutoModule,
-    LojaModule
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, UserModule, AuthModule, CategoriaModule, AvaliacaolojaModule, ProdutoModule,
+    LojaModule],
+
   controllers: [AppController],
   providers: [AppService,
     {
@@ -25,4 +24,4 @@ import { LojaModule } from './loja/loja.module';
     }
   ],
 })
-export class AppModule {}
+export class AppModule { }

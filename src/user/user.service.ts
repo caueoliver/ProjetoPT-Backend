@@ -15,7 +15,9 @@ export class UserService {
     //cria um objeto para o novo usuário
     const newUser = await this.prisma.usuarios.create({
       data:{
-        ...data,
+        email: data.email,
+        nome: data.nome,
+        name: data.name, 
         password: hashedPassword,
       }
     });
@@ -46,6 +48,20 @@ export class UserService {
     return user;
   }
 
+  //a função para buscar um usuário tem como parâmetro um id
+  async findbyId(id: number) {
+    //cria uma constante local e busca o usuário com o email correspondente
+    const user = await this.prisma.usuarios.findUnique({
+      where: { id },
+    });
+    //se ele não for encontrado o sistema retorna uma mensagem de usuário não encontrado
+    if(!user){
+      throw new NotFoundException('Usuário não encontrado')
+    }
+    //se for encontrado retorna o nome do usuário
+    return user;
+  }
+
   //a função para atualizar um usuário tem como parâmetro o id do usuário que será atualizado 
   //e um objeto updateData com os atributos definidos pelo update user dto
   async update(id: number, updateData: UpdateUserDto) {
@@ -67,7 +83,7 @@ export class UserService {
       where: { id },
     });
 
-    console.log(`Usuário ${updatedUser?.name} atualizado com sucesso`);
+    console.log(`Usuário ${updatedUser?.nome} atualizado com sucesso`);
     return updatedUser;
   }
 
