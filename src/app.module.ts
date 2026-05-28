@@ -5,9 +5,11 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { CategoriaModule } from './categoria/categoria.module';
+import { AvaliacaolojaModule } from './avaliacaoloja/avaliacaoloja.module';
 
 @Module({
-  imports: [UserModule, UserModule, AuthModule],
+  imports: [UserModule, UserModule, AuthModule, CategoriaModule, AvaliacaolojaModule],
   controllers: [AppController],
   providers: [AppService,
     {

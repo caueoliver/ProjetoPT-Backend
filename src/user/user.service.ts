@@ -15,7 +15,9 @@ export class UserService {
     //cria um objeto para o novo usuário
     const newUser = await this.prisma.usuarios.create({
       data:{
-        ...data,
+        email: data.email,
+        nome: data.nome,
+        name: data.name, 
         password: hashedPassword,
       }
     });
@@ -67,7 +69,7 @@ export class UserService {
       where: { id },
     });
 
-    console.log(`Usuário ${updatedUser?.name} atualizado com sucesso`);
+    console.log(`Usuário ${updatedUser?.nome} atualizado com sucesso`);
     return updatedUser;
   }
 
